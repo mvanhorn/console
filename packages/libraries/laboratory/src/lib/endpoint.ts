@@ -6,6 +6,7 @@ import {
   type IntrospectionQuery,
 } from 'graphql';
 import { toast } from 'sonner';
+import { asyncInterval } from '@/lib/utils';
 
 export interface LaboratoryEndpointState {
   endpoint: string | null;
@@ -70,6 +71,29 @@ export const useEndpoint = (props: {
     }
   }, [endpoint]);
 
+  const shouldPollSchema = useMemo(() => {
+    return endpoint !== props.defaultEndpoint || !props.defaultSchemaIntrospection;
+  }, [endpoint, props.defaultEndpoint, props.defaultSchemaIntrospection]);
+
+  useEffect(() => {
+    if (!shouldPollSchema || !endpoint) {
+      return;
+    }
+
+    const intervalController = new AbortController();
+
+    void asyncInterval(
+      async () => {
+        await fetchSchema();
+      },
+      5000,
+      intervalController.signal,
+    );
+    return () => {
+      intervalController.abort();
+    };
+  }, [shouldPollSchema, fetchSchema]);
+
   const restoreDefaultEndpoint = useCallback(() => {
     if (props.defaultEndpoint) {
       setEndpoint(props.defaultEndpoint);
@@ -77,10 +101,10 @@ export const useEndpoint = (props: {
   }, [props.defaultEndpoint]);
 
   useEffect(() => {
-    if (endpoint) {
+    if (endpoint && !shouldPollSchema) {
       void fetchSchema();
     }
-  }, [endpoint, fetchSchema]);
+  }, [endpoint, fetchSchema, shouldPollSchema]);
 
   return {
     endpoint,
