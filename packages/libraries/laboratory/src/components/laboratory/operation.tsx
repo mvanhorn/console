@@ -16,6 +16,7 @@ import {
   PowerIcon,
   PowerOffIcon,
   SquarePenIcon,
+  TextAlignStartIcon,
 } from 'lucide-react';
 import { compressToEncodedURIComponent } from 'lz-string';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
